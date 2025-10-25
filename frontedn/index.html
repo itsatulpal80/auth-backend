@@ -1,123 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auth Project</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 50px;
-      }
-      h2 {
-        margin-top: 30px;
-      }
-      form {
-        display: flex;
-        flex-direction: column;
-        width: 250px;
-        gap: 10px;
-        margin-bottom: 20px;
-      }
-      input,
-      button {
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      .message {
-        margin-top: 10px;
-        color: green;
-      }
-      .error {
-        color: red;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Register User</h2>
-    <form id="registerForm">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <button type="submit">Register</button>
-    </form>
-    <div class="message" id="registerMessage"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Project</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+    h2 { margin-top: 30px; }
+    form {
+      display: flex;
+      flex-direction: column;
+      width: 250px;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background-color: #0056b3; }
+    .message { margin-top: 10px; color: green; }
+    .error { color: red; }
+    table { margin-top: 20px; border-collapse: collapse; width: 300px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
 
-    <!-- <h2>Login User</h2>
+  <h2>Register User</h2>
+  <form id="registerForm">
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Register</button>
+  </form>
+  <div class="message" id="registerMessage"></div>
+
+  <!-- Optional Login Form -->
+  <!--
+  <h2>Login User</h2>
   <form id="loginForm">
     <input type="text" id="loginUsername" placeholder="Username" required />
     <input type="password" id="loginPassword" placeholder="Password" required />
     <button type="submit">Login</button>
   </form>
-  <div class="message" id="loginMessage"></div> -->
+  <div class="message" id="loginMessage"></div>
+  -->
 
-    <script>
-      // Register
-      const registerForm = document.getElementById("registerForm");
-      registerForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const usernameInput = document.getElementById("username");
-        const passwordInput = document.getElementById("password");
-        const msg = document.getElementById("registerMessage");
+  <h2>All Registered Users</h2>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Username</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Users will be dynamically inserted here -->
+    </tbody>
+  </table>
 
-        try {
-          const res = await fetch("http://localhost:5000/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: usernameInput.value,
-              password: passwordInput.value,
-            }),
-          });
+  <script>
+    const registerForm = document.getElementById('registerForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const registerMsg = document.getElementById('registerMessage');
+    const usersTableBody = document.querySelector("#usersTable tbody");
 
-          const data = await res.json();
-          msg.textContent = data.message || data.error;
-          msg.className = data.error ? "message error" : "message";
+    // Function to load all users from backend
+  // Function to load last 3 users
+async function loadUsers() {
+  usersTableBody.innerHTML = "";
+  try {
+    const res = await fetch("http://localhost:5000/users");
+    const users = await res.json();
+    
+    // Take only last 3 users
+    const lastUsers = users.slice(-3);
 
-      
-          if (data.message) {
-            usernameInput.value = "";
-            passwordInput.value = "";
-          }
-        } catch (err) {
-          msg.textContent = "Error connecting to server!";
-          msg.className = "message error";
+    lastUsers.forEach((user, index) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${users.length - lastUsers.length + index + 1}</td>
+        <td>${user.username}</td>
+      `;
+      usersTableBody.appendChild(row);
+    });
+  } catch (err) {
+    console.log("Error loading users:", err);
+  }
+}
+
+
+    // Load users on page load
+    loadUsers();
+
+    // Handle registration
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch('http://localhost:5000/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput.value, password: passwordInput.value })
+        });
+        const data = await res.json();
+        registerMsg.textContent = data.message || data.error;
+        registerMsg.className = data.error ? 'message error' : 'message';
+
+        if (data.message) {
+          // Clear form fields
+          usernameInput.value = '';
+          passwordInput.value = '';
+          // Refresh user table
+          loadUsers();
         }
-      });
+      } catch (err) {
+        registerMsg.textContent = 'Error connecting to server!';
+        registerMsg.className = 'message error';
+      }
+    });
+  </script>
 
-      // Login
-      const loginForm = document.getElementById("loginForm");
-      loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username = document.getElementById("loginUsername").value;
-        const password = document.getElementById("loginPassword").value;
-        const msg = document.getElementById("loginMessage");
-
-        try {
-          const res = await fetch("http://localhost:5000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-          });
-          const data = await res.json();
-          msg.textContent = data.message || data.error;
-          msg.className = data.error ? "message error" : "message";
-        } catch (err) {
-          msg.textContent = "Error connecting to server!";
-          msg.className = "message error";
-        }
-      });
-    </script>
-  </body>
+</body>
 </html>

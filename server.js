@@ -34,5 +34,16 @@ app.get("/", (req, res) => {
   res.send("Server is running ✅");
 });
 
+// Get all users
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find({}, { password: 0 }); // exclude passwords
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
