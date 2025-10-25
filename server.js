@@ -4,11 +4,15 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cors from "cors";
 import User from "./models/userModel.js";
+import path from "path";
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve HTML files
+app.use(express.static(path.join(path.resolve(), "public")));
 
 // ✅ Connect MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -42,6 +46,10 @@ app.get("/users", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+// Serve index.html on root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(path.resolve(), "public", "index.html"));
 });
 
 
